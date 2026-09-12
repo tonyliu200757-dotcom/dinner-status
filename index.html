@@ -425,6 +425,7 @@
                 localStorage.setItem(LOCAL_TOKEN_KEY, "authed");
                 alert("登入成功，現在可編輯餐別與備註。");
                 render();
+                addSaveUI();
             } else {
                 alert("密碼錯誤！");
             }
