@@ -1,452 +1,482 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2685.7">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px Courier; -webkit-text-stroke: #000000}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px Courier; -webkit-text-stroke: #000000; min-height: 16.0px}
-    span.s1 {font-kerning: none}
-  </style>
+    <meta charset="UTF-8">
+    <title>家庭留飯/吃飯通知</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:,">
+    <style>
+        /* ---------- 基本排版 ---------- */
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: "PingFang HK", "Microsoft JhengHei", sans-serif;
+            background: #f7f9fc;
+            color: #212121;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        /* ---------- 標題與日期 ---------- */
+        header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin: 0.2rem 0;
+        }
+
+        header .date {
+            font-size: 1.2rem;
+            color: #555;
+        }
+
+        /* ---------- 卡片容器 ---------- */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* ---------- 卡片共用樣式 ---------- */
+        .card {
+            background: #fff;
+            border-radius: 0.8rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .card h2 {
+            font-size: 1.4rem;
+            margin: 0 0 0.5rem;
+        }
+
+        .status {
+            display: inline-block;
+            min-width: 5rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.4rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* ---------- 狀態顏色 ---------- */
+        .home {
+            background: #E8F5E9;
+            color: #1B5E20;
+        }
+
+        .not-home {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        .leave {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+
+        /* ---------- 按鈕樣式（編輯模式） ---------- */
+        .edit-btns {
+            margin-top: 0.8rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        .edit-btn {
+            flex: 1;
+            padding: 0.6rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 0.4rem;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .edit-btn:active {
+            transform: scale(0.96);
+        }
+
+        .edit-home {
+            background: #C8E6C9;
+            color: #1B5E20;
+        }
+
+        .edit-not {
+            background: #FFCDD2;
+            color: #C62828;
+        }
+
+        .edit-leave {
+            background: #FFE0B2;
+            color: #E65100;
+        }
+
+        /* ---------- 備註欄 ---------- */
+        .note {
+            width: 100%;
+            max-width: 800px;
+            margin-top: 1rem;
+        }
+
+        .note textarea {
+            width: 100%;
+            min-height: 4rem;
+            padding: 0.8rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 0.6rem;
+            box-sizing: border-box;
+        }
+
+        /* ---------- 頁腳 & 控制 ---------- */
+        footer {
+            margin-top: auto;
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+
+        button {
+            font-family: inherit;
+        }
+
+        #refresh {
+            background: #e0e0e0;
+            border: none;
+            border-radius: 0.4rem;
+            padding: 0.4rem 0.8rem;
+            cursor: pointer;
+        }
+
+        #admin {
+            position: fixed;
+            right: 1rem;
+            bottom: 1rem;
+            background: #fafafa;
+            border: 1px solid #ddd;
+            border-radius: 0.6rem;
+            padding: 0.4rem 0.8rem;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ---------- Loading ---------- */
+        #loading {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            z-index: 10;
+        }
+
+        /* ---------- 手機適配 ---------- */
+        @media (max-width:600px) {
+            header h1 {
+                font-size: 1.6rem;
+            }
+
+            .card h2 {
+                font-size: 1.2rem;
+            }
+
+            .status {
+                font-size: 1rem;
+            }
+        }
+    </style>
 </head>
+
 <body>
-<p class="p1"><span class="s1">&lt;!DOCTYPE html&gt;</span></p>
-<p class="p1"><span class="s1">&lt;html lang="zh-Hant"&gt;</span></p>
-<p class="p1"><span class="s1">&lt;head&gt;</span></p>
-<p class="p1"><span class="s1">&lt;meta charset="UTF-8"&gt;</span></p>
-<p class="p1"><span class="s1">&lt;title&gt;家庭留飯/吃飯通知&lt;/title&gt;</span></p>
-<p class="p1"><span class="s1">&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span></p>
-<p class="p1"><span class="s1">&lt;link rel="icon" href="data:,"&gt;</span></p>
-<p class="p1"><span class="s1">&lt;style&gt;</span></p>
-<p class="p1"><span class="s1">/* ---------- 基本排版 ---------- */</span></p>
-<p class="p1"><span class="s1">html,body{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>margin:0;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>padding:0;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>width:100%;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>height:100%;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>font-family:"PingFang HK","Microsoft JhengHei",sans-serif;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>background:#f7f9fc;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>color:#212121;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>-webkit-font-smoothing:antialiased;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">body{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>display:flex;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>flex-direction:column;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>align-items:center;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>padding:1rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>box-sizing:border-box;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 標題與日期 ---------- */</span></p>
-<p class="p1"><span class="s1">header{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>text-align:center;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>margin-bottom:1rem;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">header h1{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>font-size:2rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>margin:0.2rem 0;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">header .date{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>font-size:1.2rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>color:#555;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 卡片容器 ---------- */</span></p>
-<p class="p1"><span class="s1">.cards{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>display:grid;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>grid-template-columns:repeat(auto-fit,minmax(260px,1fr));</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>gap:1rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>width:100%;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>max-width:800px;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 卡片共用樣式 ---------- */</span></p>
-<p class="p1"><span class="s1">.card{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>background:#fff;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border-radius:0.8rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>box-shadow:0 2px 6px rgba(0,0,0,0.08);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>padding:1rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>text-align:center;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">.card h2{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>font-size:1.4rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>margin:0 0 0.5rem;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">.status{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>display:inline-block;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>min-width:5rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>padding:0.4rem 0.8rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border-radius:0.4rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>font-size:1.2rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>font-weight:600;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 狀態顏色 ---------- */</span></p>
-<p class="p1"><span class="s1">.home{background:#E8F5E9;color:#1B5E20;}</span></p>
-<p class="p1"><span class="s1">.not-home{background:#FFEBEE;color:#C62828;}</span></p>
-<p class="p1"><span class="s1">.leave{background:#FFF3E0;color:#E65100;}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 按鈕樣式（編輯模式） ---------- */</span></p>
-<p class="p1"><span class="s1">.edit-btns{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>margin-top:0.8rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>display:flex;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>justify-content:center;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>gap:0.6rem;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">.edit-btn{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>flex:1;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>padding:0.6rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>font-size:1rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border:none;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border-radius:0.4rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>cursor:pointer;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>transition:transform 0.1s;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">.edit-btn:active{transform:scale(0.96);}</span></p>
-<p class="p1"><span class="s1">.edit-home{background:#C8E6C9;color:#1B5E20;}</span></p>
-<p class="p1"><span class="s1">.edit-not{background:#FFCDD2;color:#C62828;}</span></p>
-<p class="p1"><span class="s1">.edit-leave{background:#FFE0B2;color:#E65100;}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 備註欄 ---------- */</span></p>
-<p class="p1"><span class="s1">.note{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>width:100%;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>max-width:800px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>margin-top:1rem;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">.note textarea{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>width:100%;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>min-height:4rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>padding:0.8rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>font-size:1rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border:1px solid #ccc;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border-radius:0.6rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>box-sizing:border-box;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 頁腳 &amp; 控制 ---------- */</span></p>
-<p class="p1"><span class="s1">footer{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>margin-top:auto;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>width:100%;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>max-width:800px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>display:flex;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>justify-content:space-between;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>align-items:center;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>padding:0.5rem 0;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">button{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>font-family:inherit;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">#refresh{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>background:#e0e0e0;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border:none;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border-radius:0.4rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>padding:0.4rem 0.8rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>cursor:pointer;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">#admin{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>position:fixed;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>right:1rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>bottom:1rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>background:#fafafa;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border:1px solid #ddd;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>border-radius:0.6rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>padding:0.4rem 0.8rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>font-size:1rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>cursor:pointer;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>box-shadow:0 2px 4px rgba(0,0,0,0.1);</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- Loading ---------- */</span></p>
-<p class="p1"><span class="s1">#loading{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>position:fixed;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>inset:0;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>background:rgba(255,255,255,0.9);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>display:flex;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>justify-content:center;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>align-items:center;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>font-size:1.5rem;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>z-index:10;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 手機適配 ---------- */</span></p>
-<p class="p1"><span class="s1">@media (max-width:600px){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>header h1{font-size:1.6rem;}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>.card h2{font-size:1.2rem;}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>.status{font-size:1rem;}</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">&lt;/style&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;body&gt;</span></p>
-<p class="p1"><span class="s1">&lt;div id="loading"&gt;載入中…&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;header&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;h1&gt;家庭留飯/吃飯通知&lt;/h1&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;div class="date" id="date-info"&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;div class="date" id="last-updated"&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/header&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;main class="cards" id="cards"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;!-- 卡片會在 JavaScript 中動態產生 --&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/main&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;section class="note" id="note-section"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;textarea id="note" placeholder="備註…" readonly&gt;&lt;/textarea&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/section&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;footer&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;button id="refresh"&gt;🔄 刷新&lt;/button&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/footer&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;button id="admin"&gt;⚙️ 管理員登入&lt;/button&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;script&gt;</span></p>
-<p class="p1"><span class="s1">/* ---------- 配置 ---------- */</span></p>
-<p class="p1"><span class="s1">const BIN_ID = "6aa4be90ffd5d16053fcb73c";</span></p>
-<p class="p1"><span class="s1">const MASTER_KEY = "$2a$10$aiVHARwdGIQ1q0uUX49smepvKdikJYQ2pa0UzND57yTJtajPvng4W";</span></p>
-<p class="p1"><span class="s1">const GET_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}/latest`;</span></p>
-<p class="p1"><span class="s1">const PUT_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;</span></p>
-<p class="p1"><span class="s1">const ADMIN_PWD = "1234"; <span class="Apple-converted-space">              </span>// 初始密碼，可自行修改</span></p>
-<p class="p1"><span class="s1">const LOCAL_TOKEN_KEY = "familyMealAdminToken";</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 狀態映射 ---------- */</span></p>
-<p class="p1"><span class="s1">const STATUS = {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>home: {label:"回家食", class:"home"},</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>notHome: {label:"不回家", class:"not-home"},</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>leave: {label:"要留飯", class:"leave"}</span></p>
-<p class="p1"><span class="s1">};</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 預設資料模型 ---------- */</span></p>
-<p class="p1"><span class="s1">let data = {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>todayLunch: "home",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>todayDinner: "home",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>tomorrowLunch: "home",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>tomorrowDinner: "home",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>note: "",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>updatedAt: "" <span class="Apple-converted-space">  </span>// ISO 字串</span></p>
-<p class="p1"><span class="s1">};</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 工具函式 ---------- */</span></p>
-<p class="p1"><span class="s1">function fmtDate(d){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const opts = {month:"numeric",day:"numeric",weekday:"short"};</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>// 繁體中文 weekday 名稱：如「星期六」 → 手動加上「星期」前綴</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const parts = new Intl.DateTimeFormat("zh-HK",opts).formatToParts(d);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>let month,day,weekday;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>for(const p of parts){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>if(p.type==="month") month = p.value;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>if(p.type==="day") day = p.value;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>if(p.type==="weekday") weekday = p.value;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>return `${month}月${day}日 星期${weekday}`;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p1"><span class="s1">function fmtTime(d){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>return `${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 取得資料 ---------- */</span></p>
-<p class="p1"><span class="s1">async function loadData(){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>showLoading(true);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>try{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const res = await fetch(GET_URL);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const json = await res.json();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>if (json.record) data = {...data, ...json.record};</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}catch(e){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>console.error("load error",e);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>alert("資料讀取失敗，請稍後再試。");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}finally{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>render();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>showLoading(false);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 渲染 UI ---------- */</span></p>
-<p class="p1"><span class="s1">function render(){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>// 日期</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const now = new Date();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const todayStr = fmtDate(now);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const tomorrow = new Date(now);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>tomorrow.setDate(now.getDate()+1);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const tomorrowStr = fmtDate(tomorrow);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.getElementById("date-info").textContent = `${todayStr}<span class="Apple-converted-space">  </span>/<span class="Apple-converted-space">  </span>${tomorrowStr}`;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>// 最後更新時間</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const upd = data.updatedAt ? new Date(data.updatedAt) : null;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.getElementById("last-updated").textContent = upd ?</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>`最後更新：${fmtDate(upd)} ${fmtTime(upd)}` :</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>"未更新";</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>// 卡片</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const cardDefs = [</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>{key:"todayLunch", title:"今日午飯"},</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>{key:"todayDinner", title:"今日晚飯"},</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>{key:"tomorrowLunch", title:"明日午飯"},</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>{key:"tomorrowDinner", title:"明日晚飯"}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const container = document.getElementById("cards");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>container.innerHTML="";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const editMode = !!localStorage.getItem(LOCAL_TOKEN_KEY);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>for(const def of cardDefs){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const statusKey = data[def.key];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const st = STATUS[statusKey] || STATUS.home;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const card = document.createElement("div");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>card.className="card";</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const title = document.createElement("h2");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>title.textContent=def.title;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>card.appendChild(title);</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const status = document.createElement("div");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>status.className=`status ${st.class}`;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>status.textContent=st.label;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>card.appendChild(status);</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>if(editMode){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const btns = document.createElement("div");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>btns.className="edit-btns";</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const btnHome = document.createElement("button");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>btnHome.className="edit-btn edit-home";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>btnHome.textContent=STATUS.home.label;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>btnHome.onclick=()=&gt;{data[def.key]="home";render();};</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>btns.appendChild(btnHome);</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const btnNot = document.createElement("button");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>btnNot.className="edit-btn edit-not";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>btnNot.textContent=STATUS.notHome.label;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>btnNot.onclick=()=&gt;{data[def.key]="notHome";render();};</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>btns.appendChild(btnNot);</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const btnLeave = document.createElement("button");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>btnLeave.className="edit-btn edit-leave";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>btnLeave.textContent=STATUS.leave.label;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>btnLeave.onclick=()=&gt;{data[def.key]="leave";render();};</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>btns.appendChild(btnLeave);</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>card.appendChild(btns);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>container.appendChild(card);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>// 備註欄</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const noteEl = document.getElementById("note");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>noteEl.value = data.note||"";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>noteEl.readOnly = !editMode;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(editMode){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>noteEl.style.background="#fff";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}else{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>noteEl.style.background="#f0f0f0";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- Loading UI ---------- */</span></p>
-<p class="p1"><span class="s1">function showLoading(show){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.getElementById("loading").style.display = show?"flex":"none";</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 管理員登入 ---------- */</span></p>
-<p class="p1"><span class="s1">document.getElementById("admin").addEventListener("click",()=&gt;{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const token = localStorage.getItem(LOCAL_TOKEN_KEY);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(token){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>// 已登入，直接切換編輯模式/退出</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const leave = confirm("要退出編輯模式嗎？");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>if(leave){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>localStorage.removeItem(LOCAL_TOKEN_KEY);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>render();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>return;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const pwd = prompt("請輸入管理員密碼：");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(pwd===ADMIN_PWD){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>// 記住 token</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>localStorage.setItem(LOCAL_TOKEN_KEY, "authed");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>alert("登入成功，現在可編輯餐別與備註。");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>render();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}else{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>alert("密碼錯誤！");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
-<p class="p1"><span class="s1">});</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 手動刷新 ---------- */</span></p>
-<p class="p1"><span class="s1">document.getElementById("refresh").addEventListener("click",loadData);</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 儲存更新 ---------- */</span></p>
-<p class="p1"><span class="s1">function createSaveButton(){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const btn = document.createElement("button");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>btn.textContent="✅ 確認儲存並更新";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>btn.style.width="100%";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>btn.style.marginTop="1rem";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>btn.style.padding="0.8rem";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>btn.style.fontSize="1.2rem";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>btn.style.border="none";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>btn.style.borderRadius="0.6rem";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>btn.style.background="#4CAF50";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>btn.style.color="#fff";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>btn.style.cursor="pointer";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>btn.onclick=saveData;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>return btn;</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 新增儲存 UI（僅在編輯模式） ---------- */</span></p>
-<p class="p1"><span class="s1">function addSaveUI(){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>// 若已有，就不要重複</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(document.getElementById("save-btn")) return;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const btn = createSaveButton();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>btn.id="save-btn";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>document.body.appendChild(btn);</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 刪除儲存 UI ---------- */</span></p>
-<p class="p1"><span class="s1">function removeSaveUI(){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const btn=document.getElementById("save-btn");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(btn) btn.remove();</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 監測編輯模式變化，顯示/隱藏 儲存按鈕 ---------- */</span></p>
-<p class="p1"><span class="s1">function monitorEditMode(){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const edit = !!localStorage.getItem(LOCAL_TOKEN_KEY);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>if(edit) addSaveUI(); else removeSaveUI();</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 儲存資料至 jsonbin.io ---------- */</span></p>
-<p class="p1"><span class="s1">async function saveData(){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>// 更新時間</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>data.updatedAt = new Date().toISOString();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>data.note = document.getElementById("note").value;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>showLoading(true);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>try{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const res = await fetch(PUT_URL,{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>method:"PUT",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>headers:{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>"Content-Type":"application/json",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>"X-Master-Key":MASTER_KEY</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>},</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>body:JSON.stringify(data)</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>});</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>if(!res.ok) throw new Error(`HTTP ${res.status}`);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const json = await res.json();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>alert("更新成功！");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}catch(e){</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>console.error(e);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>alert("儲存失敗，請稍後再試。");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}finally{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>// 離開編輯模式</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>localStorage.removeItem(LOCAL_TOKEN_KEY);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>render();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>showLoading(false);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>monitorEditMode();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
-<p class="p1"><span class="s1">}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">/* ---------- 初始載入 ---------- */</span></p>
-<p class="p1"><span class="s1">loadData();</span></p>
-<p class="p1"><span class="s1">monitorEditMode();</span></p>
-<p class="p1"><span class="s1">&lt;/script&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+    <div id="loading">載入中…</div>
+
+    <header>
+        <h1>家庭留飯/吃飯通知</h1>
+        <div class="date" id="date-info"></div>
+        <div class="date" id="last-updated"></div>
+    </header>
+
+    <main class="cards" id="cards">
+        <!-- 卡片會在 JavaScript 中動態產生 -->
+    </main>
+
+    <section class="note" id="note-section">
+        <textarea id="note" placeholder="備註…" readonly></textarea>
+    </section>
+
+    <footer>
+        <button id="refresh">🔄 刷新</button>
+    </footer>
+
+    <button id="admin">⚙️ 管理員登入</button>
+
+    <script>
+        /* ---------- 配置 ---------- */
+        const BIN_ID = "6aa4be90ffd5d16053fcb73c";
+        const MASTER_KEY = "$2a$10$aiVHARwdGIQ1q0uUX49smepvKdikJYQ2pa0UzND57yTJtajPvng4W";
+        const GET_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}/latest`;
+        const PUT_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+        const ADMIN_PWD = "1234";               // 初始密碼，可自行修改
+        const LOCAL_TOKEN_KEY = "familyMealAdminToken";
+
+        /* ---------- 狀態映射 ---------- */
+        const STATUS = {
+            home: { label: "回家食", class: "home" },
+            notHome: { label: "不回家", class: "not-home" },
+            leave: { label: "要留飯", class: "leave" }
+        };
+
+        /* ---------- 預設資料模型 ---------- */
+        let data = {
+            todayLunch: "home",
+            todayDinner: "home",
+            tomorrowLunch: "home",
+            tomorrowDinner: "home",
+            note: "",
+            updatedAt: ""   // ISO 字串
+        };
+
+        /* ---------- 工具函式 ---------- */
+        function fmtDate(d) {
+            const opts = { month: "numeric", day: "numeric", weekday: "short" };
+            // 繁體中文 weekday 名稱：如「星期六」 → 手動加上「星期」前綴
+            const parts = new Intl.DateTimeFormat("zh-HK", opts).formatToParts(d);
+            let month, day, weekday;
+            for (const p of parts) {
+                if (p.type === "month") month = p.value;
+                if (p.type === "day") day = p.value;
+                if (p.type === "weekday") weekday = p.value;
+            }
+            return `${month}月${day}日 星期${weekday}`;
+        }
+        function fmtTime(d) {
+            return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
+        }
+
+        /* ---------- 取得資料 ---------- */
+        async function loadData() {
+            showLoading(true);
+            try {
+                const res = await fetch(GET_URL);
+                const json = await res.json();
+                if (json.record) data = { ...data, ...json.record };
+            } catch (e) {
+                console.error("load error", e);
+                alert("資料讀取失敗，請稍後再試。");
+            } finally {
+                render();
+                showLoading(false);
+            }
+        }
+
+        /* ---------- 渲染 UI ---------- */
+        function render() {
+            // 日期
+            const now = new Date();
+            const todayStr = fmtDate(now);
+            const tomorrow = new Date(now);
+            tomorrow.setDate(now.getDate() + 1);
+            const tomorrowStr = fmtDate(tomorrow);
+            document.getElementById("date-info").textContent = `${todayStr}  /  ${tomorrowStr}`;
+
+            // 最後更新時間
+            const upd = data.updatedAt ? new Date(data.updatedAt) : null;
+            document.getElementById("last-updated").textContent = upd ?
+                `最後更新：${fmtDate(upd)} ${fmtTime(upd)}` :
+                "未更新";
+
+            // 卡片
+            const cardDefs = [
+                { key: "todayLunch", title: "今日午飯" },
+                { key: "todayDinner", title: "今日晚飯" },
+                { key: "tomorrowLunch", title: "明日午飯" },
+                { key: "tomorrowDinner", title: "明日晚飯" }
+            ];
+            const container = document.getElementById("cards");
+            container.innerHTML = "";
+            const editMode = !!localStorage.getItem(LOCAL_TOKEN_KEY);
+            for (const def of cardDefs) {
+                const statusKey = data[def.key];
+                const st = STATUS[statusKey] || STATUS.home;
+                const card = document.createElement("div");
+                card.className = "card";
+
+                const title = document.createElement("h2");
+                title.textContent = def.title;
+                card.appendChild(title);
+
+                const status = document.createElement("div");
+                status.className = `status ${st.class}`;
+                status.textContent = st.label;
+                card.appendChild(status);
+
+                if (editMode) {
+                    const btns = document.createElement("div");
+                    btns.className = "edit-btns";
+
+                    const btnHome = document.createElement("button");
+                    btnHome.className = "edit-btn edit-home";
+                    btnHome.textContent = STATUS.home.label;
+                    btnHome.onclick = () => { data[def.key] = "home"; render(); };
+                    btns.appendChild(btnHome);
+
+                    const btnNot = document.createElement("button");
+                    btnNot.className = "edit-btn edit-not";
+                    btnNot.textContent = STATUS.notHome.label;
+                    btnNot.onclick = () => { data[def.key] = "notHome"; render(); };
+                    btns.appendChild(btnNot);
+
+                    const btnLeave = document.createElement("button");
+                    btnLeave.className = "edit-btn edit-leave";
+                    btnLeave.textContent = STATUS.leave.label;
+                    btnLeave.onclick = () => { data[def.key] = "leave"; render(); };
+                    btns.appendChild(btnLeave);
+
+                    card.appendChild(btns);
+                }
+                container.appendChild(card);
+            }
+
+            // 備註欄
+            const noteEl = document.getElementById("note");
+            noteEl.value = data.note || "";
+            noteEl.readOnly = !editMode;
+            if (editMode) {
+                noteEl.style.background = "#fff";
+            } else {
+                noteEl.style.background = "#f0f0f0";
+            }
+        }
+
+        /* ---------- Loading UI ---------- */
+        function showLoading(show) {
+            document.getElementById("loading").style.display = show ? "flex" : "none";
+        }
+
+        /* ---------- 管理員登入 ---------- */
+        document.getElementById("admin").addEventListener("click", () => {
+            const token = localStorage.getItem(LOCAL_TOKEN_KEY);
+            if (token) {
+                // 已登入，直接切換編輯模式/退出
+                const leave = confirm("要退出編輯模式嗎？");
+                if (leave) {
+                    localStorage.removeItem(LOCAL_TOKEN_KEY);
+                    render();
+                }
+                return;
+            }
+
+            const pwd = prompt("請輸入管理員密碼：");
+            if (pwd === ADMIN_PWD) {
+                // 記住 token
+                localStorage.setItem(LOCAL_TOKEN_KEY, "authed");
+                alert("登入成功，現在可編輯餐別與備註。");
+                render();
+            } else {
+                alert("密碼錯誤！");
+            }
+        });
+
+        /* ---------- 手動刷新 ---------- */
+        document.getElementById("refresh").addEventListener("click", loadData);
+
+        /* ---------- 儲存更新 ---------- */
+        function createSaveButton() {
+            const btn = document.createElement("button");
+            btn.textContent = "✅ 確認儲存並更新";
+            btn.style.width = "100%";
+            btn.style.marginTop = "1rem";
+            btn.style.padding = "0.8rem";
+            btn.style.fontSize = "1.2rem";
+            btn.style.border = "none";
+            btn.style.borderRadius = "0.6rem";
+            btn.style.background = "#4CAF50";
+            btn.style.color = "#fff";
+            btn.style.cursor = "pointer";
+            btn.onclick = saveData;
+            return btn;
+        }
+
+        /* ---------- 新增儲存 UI（僅在編輯模式） ---------- */
+        function addSaveUI() {
+            // 若已有，就不要重複
+            if (document.getElementById("save-btn")) return;
+            const btn = createSaveButton();
+            btn.id = "save-btn";
+            document.body.appendChild(btn);
+        }
+
+        /* ---------- 刪除儲存 UI ---------- */
+        function removeSaveUI() {
+            const btn = document.getElementById("save-btn");
+            if (btn) btn.remove();
+        }
+
+        /* ---------- 監測編輯模式變化，顯示/隱藏 儲存按鈕 ---------- */
+        function monitorEditMode() {
+            const edit = !!localStorage.getItem(LOCAL_TOKEN_KEY);
+            if (edit) addSaveUI(); else removeSaveUI();
+        }
+
+        /* ---------- 儲存資料至 jsonbin.io ---------- */
+        async function saveData() {
+            // 更新時間
+            data.updatedAt = new Date().toISOString();
+            data.note = document.getElementById("note").value;
+
+            showLoading(true);
+            try {
+                const res = await fetch(PUT_URL, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Master-Key": MASTER_KEY
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const json = await res.json();
+                alert("更新成功！");
+            } catch (e) {
+                console.error(e);
+                alert("儲存失敗，請稍後再試。");
+            } finally {
+                // 離開編輯模式
+                localStorage.removeItem(LOCAL_TOKEN_KEY);
+                render();
+                showLoading(false);
+                monitorEditMode();
+            }
+        }
+
+        /* ---------- 初始載入 ---------- */
+        loadData();
+        monitorEditMode();
+    </script>
 </body>
+
 </html>
