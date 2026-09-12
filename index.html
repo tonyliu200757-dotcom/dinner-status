@@ -39,9 +39,11 @@
             margin: 0.2rem 0;
         }
 
-        header .date {
-            font-size: 1.2rem;
+        /* 日期資訊將顯示於今日午飯卡片內 */
+        .dateInfo {
+            font-size: 1.0rem;
             color: #555;
+            margin-top: 0.4rem;
         }
 
         /* ---------- 卡片容器 ---------- */
@@ -90,6 +92,11 @@
         .leave {
             background: #FFF3E0;
             color: #E65100;
+        }
+
+        .undecided {
+            background: #ECEFF1;
+            color: #37474F;
         }
 
         /* ---------- 按鈕樣式（編輯模式） ---------- */
@@ -216,8 +223,7 @@
 
     <header>
         <h1>家庭留飯/吃飯通知</h1>
-        <div class="date" id="date-info"></div>
-        <div class="date" id="last-updated"></div>
+        <!-- 日期已移至今日午飯卡片 -->
     </header>
 
     <main class="cards" id="cards">
@@ -247,7 +253,8 @@
         const STATUS = {
             home: { label: "回家食", class: "home" },
             notHome: { label: "不回家", class: "not-home" },
-            leave: { label: "要留飯", class: "leave" }
+            leave: { label: "要留飯", class: "leave" },
+            undecided: { label: "未決定", class: "undecided" }
         };
 
         /* ---------- 預設資料模型 ---------- */
@@ -295,19 +302,15 @@
 
         /* ---------- 渲染 UI ---------- */
         function render() {
-            // 日期
+            // 日期與最後更新資訊
             const now = new Date();
             const todayStr = fmtDate(now);
             const tomorrow = new Date(now);
             tomorrow.setDate(now.getDate() + 1);
             const tomorrowStr = fmtDate(tomorrow);
-            document.getElementById("date-info").textContent = `${todayStr}  /  ${tomorrowStr}`;
-
-            // 最後更新時間
+            const dateString = `${todayStr} / ${tomorrowStr}`;
             const upd = data.updatedAt ? new Date(data.updatedAt) : null;
-            document.getElementById("last-updated").textContent = upd ?
-                `最後更新：${fmtDate(upd)} ${fmtTime(upd)}` :
-                "未更新";
+            const lastUpdateString = upd ? `最後更新：${fmtDate(upd)} ${fmtTime(upd)}` : "未更新";
 
             // 卡片
             const cardDefs = [
@@ -333,7 +336,18 @@
                 status.className = `status ${st.class}`;
                 status.textContent = st.label;
                 card.appendChild(status);
+                // 若為今日午飯卡，顯示日期與最後更新資訊
+                if (def.key === "todayLunch") {
+                    const dateDiv = document.createElement("div");
+                    dateDiv.className = "dateInfo";
+                    dateDiv.textContent = dateString;
+                    card.appendChild(dateDiv);
 
+                    const updateDiv = document.createElement("div");
+                    updateDiv.className = "dateInfo";
+                    updateDiv.textContent = lastUpdateString;
+                    card.appendChild(updateDiv);
+                }
                 if (editMode) {
                     const btns = document.createElement("div");
                     btns.className = "edit-btns";
@@ -355,6 +369,12 @@
                     btnLeave.textContent = STATUS.leave.label;
                     btnLeave.onclick = () => { data[def.key] = "leave"; render(); };
                     btns.appendChild(btnLeave);
+
+                    const btnUndec = document.createElement("button");
+                    btnUndec.className = "edit-btn edit-undecided";
+                    btnUndec.textContent = STATUS.undecided.label;
+                    btnUndec.onclick = () => { data[def.key] = "undecided"; render(); };
+                    btns.appendChild(btnUndec);
 
                     card.appendChild(btns);
                 }
@@ -461,6 +481,8 @@
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const json = await res.json();
                 alert("更新成功！");
+                // 重新載入最新資料以確保同步
+                await loadData();
             } catch (e) {
                 console.error(e);
                 alert("儲存失敗，請稍後再試。");
