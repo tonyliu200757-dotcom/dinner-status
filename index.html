@@ -356,13 +356,7 @@
                 status.textContent = st.label;
                 card.appendChild(status);
 
-                // 若為今日午飯卡，顯示最後更新資訊
-                if (def.key === "todayLunch") {
-                    const updateDiv = document.createElement("div");
-                    updateDiv.className = "dateInfo";
-                    updateDiv.textContent = lastUpdateString;
-                    card.appendChild(updateDiv);
-                }
+
                 if (editMode) {
                     const btns = document.createElement("div");
                     btns.className = "edit-btns";
