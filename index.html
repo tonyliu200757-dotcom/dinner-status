@@ -328,14 +328,22 @@
                 const card = document.createElement("div");
                 card.className = "card";
 
-                // title with optional date inline for 今日午飯 and 明日午飯
+                // title with optional date inline for 今日/明日午晚飯
                 const title = document.createElement("h2");
-                if (def.key === "todayLunch" || def.key === "tomorrowLunch") {
+                if (def.key === "todayLunch" || def.key === "todayDinner") {
                     const titleSpan = document.createElement("span");
                     titleSpan.textContent = `${def.title} `; // title with trailing space
                     const dateSpan = document.createElement("span");
                     dateSpan.className = "dateInfo";
-                    dateSpan.textContent = def.key === "todayLunch" ? todayStr : tomorrowStr;
+                    dateSpan.textContent = todayStr;
+                    title.appendChild(titleSpan);
+                    title.appendChild(dateSpan);
+                } else if (def.key === "tomorrowLunch" || def.key === "tomorrowDinner") {
+                    const titleSpan = document.createElement("span");
+                    titleSpan.textContent = `${def.title} `;
+                    const dateSpan = document.createElement("span");
+                    dateSpan.className = "dateInfo";
+                    dateSpan.textContent = tomorrowStr;
                     title.appendChild(titleSpan);
                     title.appendChild(dateSpan);
                 } else {
